@@ -145,9 +145,9 @@ def mc(m, depth=MC_DEPTH):
             ret = 0
             for o_action in action_choice(m, m.find('O')).values():
                 if p_action(m.find('P')) == o_action(m.find('O')):
-                    pass
+                    ret = -100
                 else:
-                    ret += 0.8 * mc(opposite_move(mm, o_action), depth - 2)[1]
+                    ret += 0.2 * mc(opposite_move(mm, o_action), depth - 2)[1]
             if ret > maxx:
                 maxx = ret
                 maxx_d = p_d
@@ -158,9 +158,9 @@ def mc(m, depth=MC_DEPTH):
         if p_l > o_l:
             maxx = 100
         elif p_l == o_l:
-            maxx = 0
+            maxx = -100
         else:
-            maxx = -1000
+            maxx = -10000
 
     if depth == MC_DEPTH:
         MC_MAP[m] = (maxx_d, maxx)
@@ -171,11 +171,14 @@ def create_mc_sets(m, depth):
     if depth <= 0:
         return
     print_map(m)
-    print(mc(m))
-    for p_action in action_choice(m, m.find('P')).values():
-        mm = player_move(m, p_action)
-        for o_action in action_choice(mm, m.find('O')).values():
-            create_mc_sets(opposite_move(mm, o_action), depth - 1)
+    mm = mc(m)
+    print(mm)
+    if mm[1]  > 20:
+        return
+    p_action = command_to_function_map[mm[0]]
+    mm = player_move(m, p_action)
+    for o_action in action_choice(mm, m.find('O')).values():
+        create_mc_sets(opposite_move(mm, o_action), depth - 1)
 
 
 def test():
