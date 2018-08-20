@@ -7,7 +7,11 @@ import os
 import signal
 
 MC_MAP = {}
-MC_DEPTH = 12
+MC_DEPTH = 14
+WIN_SCORE = 100
+DRAW_SCORE = -50
+LOSE_SCORE = -1000
+STEP_RATIO = 0.3
 
 
 class TimeoutException(Exception):
@@ -138,16 +142,16 @@ def mc(m, depth=MC_DEPTH):
     if m in MC_MAP:
         return MC_MAP[m]
     maxx_d = 'U'
-    maxx = -1
+    maxx = -100000
     if distance(m):
         for p_d, p_action in action_choice(m, m.find('P')).items():
             mm = player_move(m, p_action)
             ret = 0
             for o_action in action_choice(m, m.find('O')).values():
                 if p_action(m.find('P')) == o_action(m.find('O')):
-                    ret = -100
+                    ret = DRAW_SCORE
                 else:
-                    ret += 0.2 * mc(opposite_move(mm, o_action), depth - 2)[1]
+                    ret += STEP_RATIO * mc(opposite_move(mm, o_action), depth - 2)[1]
             if ret > maxx:
                 maxx = ret
                 maxx_d = p_d
@@ -156,11 +160,11 @@ def mc(m, depth=MC_DEPTH):
         o_d, o_l = find_logest_path(m, 'O', 20)
         maxx_d = p_d
         if p_l > o_l:
-            maxx = 100
+            maxx = WIN_SCORE
         elif p_l == o_l:
-            maxx = -100
+            maxx = DRAW_SCORE
         else:
-            maxx = -10000
+            maxx = LOSE_SCORE
 
     if depth == MC_DEPTH:
         MC_MAP[m] = (maxx_d, maxx)
@@ -173,7 +177,7 @@ def create_mc_sets(m, depth):
     print_map(m)
     mm = mc(m)
     print(mm)
-    if mm[1]  > 20:
+    if mm[1] in (WIN_SCORE, DRAW_SCORE, LOSE_SCORE):
         return
     p_action = command_to_function_map[mm[0]]
     mm = player_move(m, p_action)
@@ -193,7 +197,7 @@ def test():
     *******B
     """.replace('\n', '').replace(' ', ''), 'A', 'B')
     try:
-        create_mc_sets(m1, 10)
+        create_mc_sets(m1, 12)
     except:
         pass
     print(MC_MAP)
